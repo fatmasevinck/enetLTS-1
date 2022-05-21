@@ -6,13 +6,13 @@ residuals plots from the \code{"enetLTS"} object
 }
 %-------------------------------------------------
 \description{
-  Produce plots for the residuals of the current model.
+  Produce plots for the residuals of the current model. Residuals corresponds to deviances for \code{family="multinomial"} and \code{family="binomial"}.
 }
 %-------------------------------------------------
 \usage{
 plotResid.enetLTS(object,vers=c("reweighted","raw"), ...)
 }
-%------------------------------------
+%-------------------------------------------------
 \arguments{
 \item{object}{the model fit to be plotted.}
 
@@ -30,9 +30,11 @@ plotResid.enetLTS(object,vers=c("reweighted","raw"), ...)
 %-------------------------------------------------
 \note{
 gives the plot of
-        - residuals vs indices. (for both \code{family="binomial"} and \code{family="gaussian"}).
+        - residuals vs indices. (for \code{family="gaussian"}).
 
-        - additionally, residuals vs fitted values (for only \code{family="gaussian"}).
+        - deviances vs indices. (for both \code{family="multinomial"} and \code{family="binomial"}).
+
+        - additionally, residuals vs fitted values/link function (for \code{family="binomial"} and \code{family="gaussian"}).
 }
 %-------------------------------------------------
 \seealso{
@@ -55,11 +57,11 @@ e <- rnorm(n,0,1)                             # error terms
 eps <- 0.1                                    # contamination level
 m <- ceiling(eps*n)                           # observations to be contaminated
 eout <- e; eout[1:m] <- eout[1:m] + 10        # vertical outliers
-yout <- c(x \%*\% beta + sigma * eout)          # response
+yout <- c(x \%*\% beta + sigma * eout)        # response
 xout <- x; xout[1:m,] <- xout[1:m,] + 10      # bad leverage points
 
 \donttest{
-fit1 <- enetLTS(xout,yout,alphas=0.5,lambdas=0.05,plot=FALSE)
+fit1 <- enetLTS(xout,yout)
 plotResid.enetLTS(fit1)
 plotResid.enetLTS(fit1,vers="raw")}
 
@@ -72,26 +74,36 @@ xout <- x
 xout[y==0,][1:m,] <- xout[1:m,] + 10;          # class 0
 yout <- y                                      # wrong classification for vertical outliers
 
-\dontshow{
-set.seed(86)
-n <- 5; p <- 15                            
-beta <- rep(0,p); beta[1:6] <- 1              
-sigma <- 0.5                        
-x <- matrix(rnorm(n*p, sigma),nrow=n)   
-e <- rnorm(n,0,1)                             # error terms
-eps <- 0.1                                    # contamination level
-m <- ceiling(eps*n)                           # observations to be contaminated
-eout <- e; eout[1:m] <- eout[1:m] + 10        # vertical outliers
-yout <- c(x \%*\% beta + sigma * eout)          # response
-xout <- x; xout[1:m,] <- xout[1:m,] + 10      # bad leverage points
-fit2 <- enetLTS(xout,yout,alphas=0.5,lambdas=0.05,plot=FALSE)
-plotResid.enetLTS(fit2)
-}
 \donttest{
-fit2 <- enetLTS(xout,yout,family="binomial",alphas=0.5,lambdas=0.05,plot=FALSE)
+fit2 <- enetLTS(xout,yout,family="binomial",crit.plot=FALSE)
 plotResid.enetLTS(fit2)
-plotResid.enetLTS(fit2,vers="raw")}
+plotResid.enetLTS(fit2,vers="raw")
 }
+
+## for multinomial
+
+n <- 120; p <- 15
+NC <- 3
+X <- matrix(rnorm(n * p), n, p)
+betas <- matrix(1:NC, ncol=NC, nrow=p, byrow=TRUE)
+betas[(p-5):p,]=0; betas <- rbind(rep(0,NC),betas)
+lv <- cbind(1,X) \%*\% betas
+probs <- exp(lv)/apply(exp(lv),1,sum)
+y <- apply(probs,1,function(prob){sample(1:NC, 1, TRUE, prob)})
+xout <- X
+eps <-0.05                          # \%10 contamination to only class 0
+m <- ceiling(eps*n)
+xout[1:m,] <- xout[1:m,] + 10       # bad leverage points
+yout <- y
+
+\donttest{
+fit3 <- enetLTS(xout,yout,family="multinomial")
+plotResid.enetLTS(fit3)
+plotResid.enetLTS(fit3,vers="raw")
+}
+}
+
+
 %-------------------------------------------------
 \references{
 Kurnaz, F.S., Hoffmann, I. and Filzmoser, P. (2017) Robust and sparse

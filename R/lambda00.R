@@ -1,3 +1,5 @@
+
+#################################################################################################
 # modified from lambda0 function in robustHD package
 
 lambda00 <- function(x, y, normalize = TRUE, intercept = TRUE, const = 2,
@@ -34,5 +36,4 @@ rpbr <- function(y,x){
    M1 <- median(x[y==1])
    return((M1-M0)/mad(x)*sqrt(prod(nj)/(n*(n-1))))
 }
-
 

@@ -1,3 +1,4 @@
+#### gives raw and reweighted or both weights from the object  
 
 weights.enetLTS <-
    function(object,vers=c("reweighted","raw","both"),index=FALSE,...){

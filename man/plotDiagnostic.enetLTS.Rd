@@ -28,7 +28,12 @@ plotDiagnostic.enetLTS(object,vers=c("reweighted","raw"),...)
   An object of class \code{"ggplot"} (see \code{\link[ggplot2]{ggplot}}).
 }
 \note{
-gives the plot of fitted values vs indices.
+gives the plot of
+
+        - First two components of estimated scores for multinomial logistic regression (for \code{family="multinomial"})
+
+        - y vs fitted values/link function. (for for both \code{family="binomial"} and \code{family="gaussian"}).
+
 }
 %-------------------------------------------------
 \seealso{
@@ -52,11 +57,11 @@ e <- rnorm(n,0,1)                             # error terms
 eps <- 0.1                                    # contamination level
 m <- ceiling(eps*n)                           # observations to be contaminated
 eout <- e; eout[1:m] <- eout[1:m] + 10        # vertical outliers
-yout <- c(x \%*\% beta + sigma * eout)          # response
+yout <- c(x \%*\% beta + sigma * eout)        # response
 xout <- x; xout[1:m,] <- xout[1:m,] + 10      # bad leverage points
 
 \donttest{
-fit1 <- enetLTS(xout,yout,alphas=0.5,lambdas=0.05,plot=FALSE)
+fit1 <- enetLTS(xout,yout,crit.plot=FALSE)
 plotDiagnostic.enetLTS(fit1)
 plotDiagnostic.enetLTS(fit1,vers="raw")}
 
@@ -69,26 +74,33 @@ xout <- x
 xout[y==0,][1:m,] <- xout[1:m,] + 10;          # class 0
 yout <- y                                      # wrong classification for vertical outliers
 
-\dontshow{
-set.seed(86)
-n <- 5; p <- 15                            
-beta <- rep(0,p); beta[1:6] <- 1              
-sigma <- 0.5                        
-x <- matrix(rnorm(n*p, sigma),nrow=n)   
-e <- rnorm(n,0,1)                             # error terms
-eps <- 0.1                                    # contamination level
-m <- ceiling(eps*n)                           # observations to be contaminated
-eout <- e; eout[1:m] <- eout[1:m] + 10        # vertical outliers
-yout <- c(x \%*\% beta + sigma * eout)          # response
-xout <- x; xout[1:m,] <- xout[1:m,] + 10      # bad leverage points
-fit2 <- enetLTS(xout,yout,alphas=0.5,lambdas=0.05,plot=FALSE)
-plotDiagnostic.enetLTS(fit2)
-}
 \donttest{
-fit2 <- enetLTS(xout,yout,family="binomial",alphas=0.5,lambdas=0.05,plot=FALSE)
+fit2 <- enetLTS(xout,yout,family="binomial",crit.plot=FALSE)
 plotDiagnostic.enetLTS(fit2)
-plotDiagnostic.enetLTS(fit2,vers="raw")}
+plotDiagnostic.enetLTS(fit2,vers="raw")
+}
 
+## for multinomial
+
+n <- 120; p <- 15
+NC <- 3
+X <- matrix(rnorm(n * p), n, p)
+betas <- matrix(1:NC, ncol=NC, nrow=p, byrow=TRUE)
+betas[(p-5):p,]=0; betas <- rbind(rep(0,NC),betas)
+lv <- cbind(1,X) \%*\% betas
+probs <- exp(lv)/apply(exp(lv),1,sum)
+y <- apply(probs,1,function(prob){sample(1:NC, 1, TRUE, prob)})
+xout <- X
+eps <-0.05                          # \%10 contamination to only class 0
+m <- ceiling(eps*n)
+xout[1:m,] <- xout[1:m,] + 10       # bad leverage points
+yout <- y
+
+\donttest{
+fit3 <- enetLTS(xout,yout,family="multinomial",crit.plot=FALSE)
+plotDiagnostic.enetLTS(fit3)
+plotDiagnostic.enetLTS(fit3,vers="raw")
+}
 }
 %-------------------------------------------------
 \references{
